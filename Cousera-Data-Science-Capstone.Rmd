@@ -1,0 +1,141 @@
+---
+title: "Cousera-Data-Science-Capstone"
+author: "Hiroshi Kamijo"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction 
+
+This is Milestone Report for Data Science Capstone project from Coursera Data Science Specialization. The Objective of this report is to analyze text of blogs, news and twitter in the US.
+
+## Set Up
+
+First, loading necessary package and data set.
+```{r, echo=TRUE}
+library(ggplot2)
+library(NLP)
+library(tm)
+library(RWeka)
+```
+
+```{r, echo=TRUE}
+blog <- readLines("en_US/en_US.blogs.txt",skipNul = TRUE, warn = TRUE)
+news <- readLines("en_US/en_US.news.txt",skipNul = TRUE, warn = TRUE)
+twitter <- readLines("en_US/en_US.twitter.txt",skipNul = TRUE, warn = TRUE)
+```
+
+## Subsampling
+
+Three text data are very large, so I sample subet to make it easy to handle. I sample 1000 entries from each data.
+
+```{r, echo=TRUE}
+set.seed(0)
+sample_size = 1000
+
+sampled_blog <- blog[sample(1:length(blog),sample_size)]
+sampled_news <- news[sample(1:length(news),sample_size)]
+sampled_twitter <- twitter[sample(1:length(twitter),sample_size)]
+```
+
+```{r, echo=TRUE}
+head(sampled_blog)
+```
+
+```{r, echo=TRUE}
+head(sampled_news)
+```
+
+```{r, echo=TRUE}
+head(sampled_twitter)
+```
+
+Combining three data.
+
+```{r, echo=TRUE}
+sampled_data <- rbind(sampled_blog,sampled_news,sampled_twitter)
+```
+
+## Cleaning Data
+
+This text data is including annoying data for analyzing. For example, punctuation, whitespace, discard and uppercases. So I convert this data. Fisrt, removing punctuation, second, removing whitespace, third, converting uppercase to lowercase, finally, removing numbers
+
+```{r, echo=TRUE}
+corpus<-VCorpus(VectorSource(sampled_data))
+corpus <- tm_map(corpus, removePunctuation) # remove punctuation
+corpus <- tm_map(corpus, stripWhitespace) # remove whitespace
+corpus <- tm_map(corpus, content_transformer(tolower)) # convert to lowercase
+corpus <- tm_map(corpus, removeNumbers) # remove numbers
+changetospace <- content_transformer(function(x, pattern) gsub(pattern, " ", x))
+corpus <- tm_map(corpus, changetospace, "/|@|\\|")
+```
+
+## N-grams 
+
+We use NGramTokenizer for this analysis. In this project, we analyze unigram, bigram, and trigram.
+
+```{r, echo=TRUE}
+uniGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 1))
+biGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+triGramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+
+
+uniGM <- TermDocumentMatrix(corpus, control = list(tokenize = uniGramTokenizer))
+biGM <- TermDocumentMatrix(corpus, control = list(tokenize = biGramTokenizer))
+triGM <- TermDocumentMatrix(corpus, control = list(tokenize = triGramTokenizer))
+```
+
+## Generate n-gram histograms
+Plotting unigram historam.
+
+```{r, echo=TRUE}
+freqTerms <- findFreqTerms(uniGM, lowfreq = 200)
+termFreq <- rowSums(as.matrix(uniGM[freqTerms,]))
+termFreq <- data.frame(unigram=names(termFreq), frequency=termFreq)
+
+g1 <- ggplot(termFreq, aes(x=reorder(unigram, frequency), y=frequency)) +
+    geom_bar(stat = "identity") +  coord_flip() +
+    theme(legend.title=element_blank()) +
+    xlab("Unigram") + ylab("Frequency") +
+    labs(title = "Ranking unigrams by frequency")
+print(g1)
+```
+
+Plotting bigram historam.
+```{r, echo=TRUE}
+freqTerms <- findFreqTerms(biGM, lowfreq = 70)
+termFreq <- rowSums(as.matrix(biGM[freqTerms,]))
+termFreq <- data.frame(bigram=names(termFreq), frequency=termFreq)
+
+g2 <- ggplot(termFreq, aes(x=reorder(bigram, frequency), y=frequency)) +
+    geom_bar(stat = "identity") +  coord_flip() +
+    theme(legend.title=element_blank()) +
+    xlab("Bigram") + ylab("Frequency") +
+    labs(title = "Ranking bigrams by frequency")
+print(g2)
+```
+
+
+Plotting trigram historam.
+```{r, echo=TRUE}
+freqTerms <- findFreqTerms(triGM, lowfreq = 10)
+termFreq <- rowSums(as.matrix(triGM[freqTerms,]))
+termFreq <- data.frame(trigram=names(termFreq), frequency=termFreq)
+
+g3 <- ggplot(termFreq, aes(x=reorder(trigram, frequency), y=frequency)) +
+    geom_bar(stat = "identity") +  coord_flip() +
+    theme(legend.title=element_blank()) +
+    xlab("Trigram") + ylab("Frequency") +
+    labs(title = "Ranking trigrams by frequency")
+print(g3)
+```
+
+## Conclusion
+
+I use N-gram for analyzing text. We can see frequency of each units of one word, two words, and three words.
+Next, I will create shiny app to predict with this analysis.
+
