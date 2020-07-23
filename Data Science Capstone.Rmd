@@ -1,0 +1,51 @@
+---
+title: "Data Science Capstone"
+author: "Hiroshi Kamijo"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+This product is final report of Data Science cousrse of Coursera, provided by Johns Hopkins University. The link is here.
+
+- https://www.coursera.org/specializations/jhu-data-science
+
+In this product, I analyzed data provided by SwiftKey Company and predicted next word you type.
+
+## Data And Model
+
+In this product, I use below data.
+
+- https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/Coursera-SwiftKey.zip
+
+This is text data with blogs, news, and twitter. This data has whitespace,  punctuation and uppercase and so on. These alphabet is annoying to analyze. So I cleaned and converted these word.
+
+To build model, I tokenized to make N-grams. I mada 1-grams, 2-grams, and 3-grams.
+
+## Shiny App
+
+My shiny app is below.
+
+- https://khj-lab.shinyapps.io/Cousera-Data-Science-Capstone/
+
+You can type an any sentence. And to press [OK] button or Enter button, predicting a next word that is following sentence you typed. 
+But this application is ignoring numbers and special characters.
+
+Source cord is below.
+
+- https://github.com/khj-lab/Cousera-Data-Science-Capstone
+
+## Conclusion 
+
+I analyzed SwiftKey data and cleaned to understand this data and to construct predictive model.
+
+I used  N-grams for predicting model. If you type a sentence, you can get a next word most likely. 
+
+This app is to predict one word most likely, but combined typed sentence and the word is incomplete. So I think next action is to change another predictive model to predict two or three next words that is following typed sentence.
+
+Thank you for your review.
